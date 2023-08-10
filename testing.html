@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Testing Grounds</title>
+        <link rel="stylesheet" href="styles/counter.css">
+    </head>
+    <body id="body">
+        <button id="minusBtn">-1</button>
+        <p id="counter">0</p>
+        <button id="plusBtn">+1</button>
+
+        <br>
+
+        <input id="customAmount" type="number" pattern="-?[0-9]{,3}" min="-100" max="100">
+        <button id="customAmountBtn">Apply</button>
+
+        <br>
+
+        <div id="buttonDiv">
+            <p> Button factory:</p>
+
+            <p id="buttonCounter">0</button>
+            <br>
+
+            <!-- <button id="buttonMaker" onclick="makeButton()">Button Maker</button> -->
+            <button id="buttonMaker">Button Maker</button>
+            <ul id="buttonList">
+            </ul>
+        </div>
+
+        <!-- <script src="scripts/counter.js"></script> -->
+        <script src="scripts/buttonmaker.js"></script>
+    </body>
+</html>

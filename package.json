@@ -1,0 +1,26 @@
+{
+  "name": "authorwriteus",
+  "version": "1.0.0",
+  "description": "A Website to colaborate writing fun stories. Learning project.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GrantBowman/AuthorWriteUs.git"
+  },
+  "keywords": [
+    "story",
+    "node",
+    "website",
+    "project"
+  ],
+  "author": "Grant Bowman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GrantBowman/AuthorWriteUs/issues"
+  },
+  "homepage": "https://github.com/GrantBowman/AuthorWriteUs#readme"
+}

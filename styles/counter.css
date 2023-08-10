@@ -1,0 +1,9 @@
+#counter {
+    display: inline;
+    border-style: solid;
+    border-width: 1px
+}
+
+#customAmount {
+    width: 4em
+}
