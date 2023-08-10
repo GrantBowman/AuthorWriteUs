@@ -3,11 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
 
-// my public ip = 71.218.129.129
-// my ipconfig IPv4 addess is 192.168.0.29
-// port forwarding is set up on 3000 -> 3000
 const hostname = '127.0.0.1';
-// const hostname = '192.168.0.29';
 const port = 3000;
 
 // Create a map to store session data
