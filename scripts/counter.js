@@ -22,7 +22,6 @@ button_sub.onclick = function sub_one() {
 
 button_custom.onclick = function apply_val() {
     var delta = parseInt(input_custom.value, 10);
-    if
     value += delta;
     counter.innerHTML = value;
     input_custom.value = 0;

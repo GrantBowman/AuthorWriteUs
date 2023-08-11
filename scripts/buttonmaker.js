@@ -19,19 +19,15 @@ function makeButton() {
     newButton.buttonCounter = buttonCounter(newButton);
     newButton.addEventListener('click', newButton.buttonCounter.increment);
     newButton.textContent = newButton.buttonCounter.getCount();
-    console.log("New button made");
 };
 
 function buttonCounter(button) {
     let count = 0;
     let myButton = button;
 
-    console.log("button counter made!")
-
     function increment(event) {
         count++;
         myButton.textContent = count;
-        console.log(`button with id ${event.target.id} was clicked`);
     }
 
     function getCount() {
