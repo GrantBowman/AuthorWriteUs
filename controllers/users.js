@@ -5,49 +5,10 @@ const users = new Map();
 const db = require("./database.js");
 const pool = db.pool;
 
-class User {
-    constructor(username, password) {
-        this.username = username;
-        this.password = password;
-    }
-
-    authenticate(providedPassword) {
-        pool.query('SELECT username, password FROM UserTable WHERE username=$1', [username], (error, result) => {
-            if (error) {
-                res.status(500).send("Internal Server Error");
-                return false;
-            }
-
-            if (result.rowCount === 1) {
-
-            }
-            res.status()
-        })
-
-        .then(result => {
-
-            console.log(result.rows);
-        })
-        .catch(err => {
-            console.log(err);
-        })
-        .finally(result => {
-            console.log("finally...");
-        });
-        return this.password === providedPassword;
-    }
-};
-
 function addUser(username, password) {
+    // TODO: FIXME
+    return false;
     // TODO: user check and insertion into the database!
-    // check username not in use
-    if (users.has(username)) {
-        return false;
-    }
-    // add user
-    const user = new User(username, password);
-    users.set(username, user);
-    return true;
 }
 
 /*
@@ -60,9 +21,8 @@ async function authenticateUser(username, providedPassword) {
     const result = await pool.query('SELECT userid, username, password FROM UserTable WHERE username=$1', [username])
     if (result.rowCount === 1) {
         if (result.rows[0].password === providedPassword) {
-            console.log("authenticateUser passwords match for userid");
+            console.log(`authenticateUser passwords match for username ${username}, password ${providedPassword}`);
             console.log(result.rows);
-            console.log(result.rows[0].userid);
             return result.rows[0].userid;
         }
         console.log(`authenticateUser: username '${username}', invalid password '${providedPassword}'.`);

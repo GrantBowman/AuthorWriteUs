@@ -1,4 +1,4 @@
-console.log("user-signup.js script loaded.");
+
 const signupHeader = document.getElementById('signup-header');
 signupHeader.textContent = "Sign Up Here!"
 

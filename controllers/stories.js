@@ -14,9 +14,7 @@ async function getStoryContent(storyid) {
     if (settingsResult.rowCount !== 1) {
         return null;
     }
-    console.log(settingsResult.rows[0].storysettings);
     const inputLength = settingsResult.rows[0].storysettings.inputLength;
-    console.log(inputLength);
 
     const separator = (inputLength === "paragraph") ? '\n' : " ";
 
@@ -29,7 +27,6 @@ async function getStoryContent(storyid) {
     const contentResult = await pool.query(contentQuery, [storyid]);
 
     const content = contentResult.rows.map(item => item.content).join(separator);
-    console.log(content);
 
     return content;
 

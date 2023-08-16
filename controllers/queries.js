@@ -16,7 +16,6 @@ async function getStoriesByUser(userid) {
     WHERE u.userId=$1;"
     
     const result = await pool.query(query, [userid])
-    console.log(result.rows)
     return result.rows;
 }
 

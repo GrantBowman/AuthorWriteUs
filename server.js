@@ -47,7 +47,6 @@ app.use((req, res, next) => {
     console.log(`${req.method} ${req.url} from ${req.socket.remoteAddress}`);
 
     res.locals.session = req.session;
-    // console.log(res.locals.session);
     next();
 });
 
@@ -64,7 +63,6 @@ app.get('/library', async (req, res) => {
 app.get('/user/:username', async (req, res) => {
     const username = slugify(req.params.username);
     const userid = await Users.getUserId(username);
-    console.log(userid);
     if (userid === null) {
         res.status(404).send("User does not exist");
         return;
@@ -77,9 +75,7 @@ app.get('/story/:storytitle', async (req, res) => {
     const storytitle = slugify(req.params.storytitle, " ", {upper: true});
     const storyid = await Stories.getStoryId(storytitle);
     const storycontent = await Stories.getStoryContent(storyid);
-    console.log(storycontent);
     const authors = await Quiries.getUsernamesByStory(storyid);
-    console.log(authors);
     username = req.session.username;
     res.render('story', {username, storytitle, storycontent, authors});
 });
@@ -90,10 +86,6 @@ app.post('/logout', (req, res) => {
 });
 
 app.get('/home', (req, res) => {
-    const username = req.session.username;
-    res.render('home', {username});
-});
-app.get('/home.html', (req, res) => {
     const username = req.session.username;
     res.render('home', {username});
 });
@@ -188,14 +180,6 @@ app.get("/scripts/:filename", (req, res) => {
     });
 });
 
-// app.get("/get-username", (req, res) => {
-//     const username = req.session.username;
-//     const data = {
-//         success : true,
-//         username : username
-//     }
-//     res.status(200).json(data);
-// });
 
 // order matters
 

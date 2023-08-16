@@ -21,7 +21,7 @@ form.addEventListener('submit', async (event) => {
     // either is success or fail
     if (result.success) {
         // user is signed in, go to home page?
-        window.location.href = "/home.html"
+        window.location.href = "/home"
     }
     else {
         // sign-in failed. give error and allow them to try again
