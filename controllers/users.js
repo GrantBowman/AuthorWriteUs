@@ -2,6 +2,8 @@
 // TODO: track users in a database
 // runtime map of users
 const users = new Map();
+const db = require("./database.js");
+const pool = db.pool;
 
 class User {
     constructor(username, password) {
@@ -10,11 +12,34 @@ class User {
     }
 
     authenticate(providedPassword) {
+        pool.query('SELECT username, password FROM UserTable WHERE username=$1', [username], (error, result) => {
+            if (error) {
+                res.status(500).send("Internal Server Error");
+                return false;
+            }
+
+            if (result.rowCount === 1) {
+
+            }
+            res.status()
+        })
+
+        .then(result => {
+
+            console.log(result.rows);
+        })
+        .catch(err => {
+            console.log(err);
+        })
+        .finally(result => {
+            console.log("finally...");
+        });
         return this.password === providedPassword;
     }
 };
 
 function addUser(username, password) {
+    // TODO: user check and insertion into the database!
     // check username not in use
     if (users.has(username)) {
         return false;
@@ -25,30 +50,48 @@ function addUser(username, password) {
     return true;
 }
 
-function getUser(username) {
-    return users.get(username);
-}
-
-function authenticateUser(username, providedPassword) {
-    // TODO: user a O(1) library to deter security attacks ulnerability
-    const user = users.get(username);
-    if (user) {
-        if (user.password === providedPassword){
-            return user;
+/*
+ * @param {string} username - username to look up
+ * @param {string} providedPassword - submitted password with the username 
+ * 
+ * @returns {?number} - returns the userid associated with username on successful login, else null
+ */
+async function authenticateUser(username, providedPassword) {
+    const result = await pool.query('SELECT userid, username, password FROM UserTable WHERE username=$1', [username])
+    if (result.rowCount === 1) {
+        if (result.rows[0].password === providedPassword) {
+            console.log("authenticateUser passwords match for userid");
+            console.log(result.rows);
+            console.log(result.rows[0].userid);
+            return result.rows[0].userid;
         }
-        console.log(`authenticateUser: username '${username}', invalid password '${password}'.`);
+        console.log(`authenticateUser: username '${username}', invalid password '${providedPassword}'.`);
         return null;
     }
     console.log(`authenticateUser: user '${username}' DNE.`);
     return null;
 }
 
-// add some default users
-addUser("user1", "pass1");
-addUser("user2", "pass2");
-addUser("user3", "pass3");
+async function getUserId(username) {
+    const result = await pool.query('SELECT userid FROM usertable WHERE username=$1', [username])
+    if (result.rowCount === 1) {
+        return result.rows[0].userid;
+    }
+    return null;
+}
 
-const guestUser = new User("guest", "");
+/*
+ * This function takes a userid, queries the database, and returns the username or null
+ * @param {number} userid - The userid
+ * @returns {?string} - returns the username string if found, else null
+ */
+async function getUsername(userid) {
+    const result = await pool.query('SELECT username FROM UserTable WHERE userid=$1', [userid])
+    if (result.rowCount === 1) {
+        return result.rows[0].username;
+    }
+    return null;
+}
 
-module.exports = {addUser, getUser, authenticateUser, guestUser};
+module.exports = {addUser, getUserId, getUsername, authenticateUser};
 

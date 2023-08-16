@@ -6,9 +6,8 @@
 
 
     <body>
-        <p>Welcome, <span class="username">guest</span>!</p>
-
-        <p><a href="./login.html">Login</a></p>
+        <%- include('partials/current-user-header') %>
+        
         <h1>Home Page</h1>
         <p><a href="./create.html">Create Story</a></p>
         <h2>In-progress Stories:</h2>
@@ -22,6 +21,5 @@
         <h2>Completed Stories:</h2>
         <p><a href="./library">View Library</a></p>
 
-        <script src="/scripts/username.js"></script>
     </body>
 </html>

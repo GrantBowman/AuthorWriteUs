@@ -20,4 +20,4 @@ async function doThing () {
     });
 }
 
-doThing();
+document.addEventListener('DOMContentLoaded', doThing);

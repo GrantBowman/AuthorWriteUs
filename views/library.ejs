@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Author-Write-Us</title>
+    </head>
+
+
+    <body>
+        <%- include('partials/current-user-header') %>
+        <ul>
+            <% for (const story of stories) { %>
+                <li><a href="/story/<%= story.storytitle%>"><%= story.storytitle %></a></li>
+            <% } %>
+        </ul>
+
+        <p><a href="/home">Home</a></p>
+    </body>
+</html>

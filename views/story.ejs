@@ -1,0 +1,21 @@
+
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><%= storytitle %></title>
+    </head>
+
+
+    <body>
+        <h1><%= storytitle %></h1>
+        <p><%= storycontent %></p>
+        <h2>Authors:</h2>
+        <ul>
+            <% for (const user of authors) { %>
+                <li><a href="/user/<%= user.username %>"><%= user.username %></a></li>
+            <% } %>
+        </ul>
+        <p><a href="/homel">Home</a></p>
+    </body>
+</html>
