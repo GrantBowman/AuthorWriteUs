@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>Author-Write-Us</title>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
     </head>
 
 
@@ -11,13 +12,18 @@
         <h1>Home Page</h1>
         <p><a href="./create.html">Create Story</a></p>
         <h2>In-progress Stories:</h2>
-        <table>
+        <ul>
+            <% for (const story of stories) { %>
+                <li><a href="/story/<%= story.storytitle%>"><%= story.storytitle %></a></li>
+            <% } %>
+        </ul>
+        <!-- <table>
             <tr>
                 <th>Story</th>
                 <th>Authors</th>
                 <th>Date</th>
             </tr>
-        </table>
+        </table> -->
         <h2>Completed Stories:</h2>
         <p><a href="/library">View Library</a></p>
 

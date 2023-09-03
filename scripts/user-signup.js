@@ -1,4 +1,3 @@
-
 const signupHeader = document.getElementById('signup-header');
 signupHeader.textContent = "Sign Up Here!"
 
@@ -19,7 +18,7 @@ form.addEventListener('submit', async (event) => {
 
     const feedback = document.getElementById("feedback");
     if (result.success) {
-        feedback.textContent = "New user added! User the login page to log in."
+        window.location.href = "/home"
     }
     else {
         feedback.textContent = "Error: " + result.message;

@@ -50,13 +50,15 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/favicon.ico', express.static('public/favicon.ico'));
+
 
 // routes
 
 app.get('/library', async (req, res) => {
     
     username = req.session.username;
-    const stories = await Stories.getStoryTitles();
+    const stories = await Stories.getInactiveStoryTitles();
     res.render('library', {username, stories});
 });
 
@@ -85,11 +87,11 @@ app.post('/logout', (req, res) => {
     res.status(200).redirect('/login.html');
 });
 
-app.get('/home', (req, res) => {
+app.get('/home', async (req, res) => {
     const username = req.session.username;
-    res.render('home', {username});
+    const stories = await Stories.getActiveStoryTitles();
+    res.render('home', {username, stories});
 });
-
 
 app.post("/login-submitted", async (req, res) => {
     const {username, password} = req.body;
@@ -122,6 +124,15 @@ app.post("/login-submitted", async (req, res) => {
 app.post("/signup-submitted", async (req, res) => {
     const {username, password, confirmPassword} = req.body;
 
+    // Validate alphanumeric username with no spaces
+    const alphanumericPattern = /^[A-Za-z0-9]+$/;
+    if (!alphanumericPattern.test(username)) {
+        data = {
+            success : false,
+            message : "Invalid username format. Please use alphanumeric."
+        }
+        return res.status(400).json(data);
+    }
     
     // Validate username (no spaces)
     if (username.includes(' ')) {
@@ -158,6 +169,7 @@ app.post("/signup-submitted", async (req, res) => {
 
     // add user
     Users.addUser(username, password);
+    req.session.username = username;
     data = {
         success : true,
         message : "User registered successfully!"
@@ -185,7 +197,7 @@ app.get("/scripts/:filename", (req, res) => {
 
 // this handles the html GETs methinks
 // app.use("/pages", express.static(path.join(__dirname + "/pages")));
-app.use(express.static("pages"));
+app.use(express.static("public"));
 
 app.use((req, res) => {
     res.status(404).send("Page not found");

@@ -5,8 +5,23 @@ const users = new Map();
 const db = require("./database.js");
 const pool = db.pool;
 
-function addUser(username, password) {
+async function addUser(username, password) {
     // TODO: FIXME
+    // check username does not already exist
+    let userId = await getUserId(username)
+    console.log("seeing if user already exists...");
+    console.log(userId);
+    if (userId === null) {
+        // add user + password to the UserTable    
+        const result = await pool.query('INSERT INTO UserTable (username, password) VALUES ($1, $2);', [username, password]);
+        console.log("should be added....");
+        console.log(result);
+        console.log(result.rows);
+        userId = await getUserId(username);
+        console.log("userId after add?:");
+        console.log(userId); 
+        return true;
+    }
     return false;
     // TODO: user check and insertion into the database!
 }

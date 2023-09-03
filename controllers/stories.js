@@ -53,5 +53,15 @@ async function getStoryTitles() {
     return result.rows;
 }
 
+async function getActiveStoryTitles() {
+    const result = await pool.query('SELECT storytitle FROM storytable WHERE inprogress=TRUE');
+    return result.rows;
+}
 
-module.exports = {getStoryContent, getStoryId, getStoryTitle, getStoryTitles};
+async function getInactiveStoryTitles() {
+    const result = await pool.query('SELECT storytitle FROM storytable WHERE inprogrees=FALSE');
+    return result.rows;
+}
+
+
+module.exports = {getStoryContent, getStoryId, getStoryTitle, getStoryTitles, getActiveStoryTitles, getInactiveStoryTitles};

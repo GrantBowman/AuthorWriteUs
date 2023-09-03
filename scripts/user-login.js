@@ -1,4 +1,3 @@
-console.log("user-login.js script loaded.");
 const loginHeader = document.getElementById('login-header');
 loginHeader.textContent = "Login Here!"
 
@@ -18,17 +17,11 @@ form.addEventListener('submit', async (event) => {
     const result = await response.json();
 
     const feedback = document.getElementById("feedback");
-    // either is success or fail
     if (result.success) {
-        // user is signed in, go to home page?
         window.location.href = "/home"
     }
     else {
-        // sign-in failed. give error and allow them to try again
         feedback.textContent = result.message;
-        setTimeout(() => {
-            feedback.textContent = "";
-        }, 5000);
     }
 
 });

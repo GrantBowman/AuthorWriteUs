@@ -18,16 +18,12 @@ MVP:
 home, START story, single user write, STORY page
 
 todo:
-- force no cookie starting in the home page
 - a way to hide other pages so cant just url navigate to them?
-- story 'object's (see User?)
-- display stories
 - write and save a story
 - save users and stories in database ;  pull and reference/display from that database
 - collaborate between 2+ users writing a story
 
 improvements:
-o user 'signin' (by session(?), just a name for self, holds between pages)
 - delete stories from STORY page
 - trade writing between users
 - detect valid word/sentence (can be basic)
