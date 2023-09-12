@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Author-Write-Us</title>
+    </head>
+
+
+    <body>
+        <%- include('partials/current-user-header') %>
+        <h1>Writing Desk</h1>
+
+        <h2><%= storytitle %></h2>
+        
+        <% if (previousinput === null || typeof previousinput === "undefined") { %>
+            <p>This is the beginning of the story!</p>
+        <% } else { %>
+            <p>Previous input:</p>
+            <p><%= previousinput %></p>
+        <% } %>
+
+        
+        <form id="writing-form" action="./writing-submitted" method="POST" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+            <p><input id="writingInput" type="text" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
+            <p><input type="submit" value="Submit"></p>
+        </form>
+            
+        <p><a href="/home">Leave</a></p>
+    </body>
+</html>

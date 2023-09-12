@@ -8,6 +8,7 @@
 
     <body>
         <%- include('partials/current-user-header') %>
+        <h1>Library</h1>
         <ul>
             <% for (const story of stories) { %>
                 <li><a href="/story/<%= story.storytitle%>"><%= story.storytitle %></a></li>

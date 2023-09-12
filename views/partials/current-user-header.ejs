@@ -1,9 +1,9 @@
 
-<% if (typeof(username) !== "undefined") { %>
+<% if (username === null || typeof username === "undefined") { %>
+    <p>You are currently logged out.</p>
+    <a href="/login.html"><button>Login</button></a>
+<% } else { %>
     <p>You are currently logged in as <a href="/user/<%= username %>"><%= username %>.</a></p>
     <button id="logoutBtn">Logout</button>
     <script src="/scripts/user-logout.js"></script>
-<% } else { %>
-    <p>You are currently logged out.</p>
-    <a href="/login.html"><button>Login</button></a>
 <% } %>

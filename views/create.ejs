@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Author-Write-Us</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+
+
+<body>
+    <%- include('partials/current-user-header') %>
+    <h1>Story Settings</h1>
+    <form id="create-form">
+        <label for="storyTitle">The title of my story is</label>
+        <input id="storyTitle" name="storyTitle" type="text" placeholder="Story Title" required>
+        
+        <br>
+        <label for="inputLength">I want to build this story</label>
+        <select id="inputLength" name="inputLength" required>
+            <option>word-by-word</option>
+            <option selected>line-by-line</option>
+            <option>paragraph-by-paragraph</option>
+        </select>
+        
+        <br>
+        <label for="numInputs">How long is your story? Set number of inputs:</label>
+        <input id="numInputs" name="numInputs" type="number" value="10">
+        
+        <br>
+        <label for="prompt">Select prompt:</label>
+        <select id="prompt" name="prompt" required>
+            <option selected>(No prompt)</option>
+            <option>(Random Prompt)</option>
+            <option>Space Cowboys</option>
+            <option>Apocolyptic City</option>
+            <option>Jungle Adventure</option>
+            <option>School Drama</option>
+            <option>Sea-Bound Voyage</option>
+            <option>Day in the Life</option>
+            <option>Aliens!</option>
+            <option>A Mysterious Object</option>
+            <option>A New Job</option>
+            <option>Tomorrow's The Day...</option>
+            <option>Close Encounter</option>
+        </select>
+
+        <br>
+        <input type="submit" value="Begin Writing">
+        <!-- <p><a href="./writing">Begin Writing</a></p> -->
+    </form>
+
+    <p><a href="./home">Home</a></p>
+    <script src="/scripts/create-story.js"></script>
+</body>
+
