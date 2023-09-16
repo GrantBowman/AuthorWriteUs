@@ -6,20 +6,13 @@ const db = require("./database.js");
 const pool = db.pool;
 
 async function addUser(username, password) {
-    // TODO: FIXME
     // check username does not already exist
     let userId = await getUserId(username)
-    console.log("seeing if user already exists...");
-    console.log(userId);
     if (userId === null) {
         // add user + password to the UserTable    
         const result = await pool.query('INSERT INTO UserTable (username, password) VALUES ($1, $2);', [username, password]);
-        console.log("should be added....");
-        console.log(result);
-        console.log(result.rows);
         userId = await getUserId(username);
-        console.log("userId after add?:");
-        console.log(userId); 
+        console.log(`Users.addUser: User added! userId=${userId}`);
         return true;
     }
     return false;
@@ -36,14 +29,14 @@ async function authenticateUser(username, providedPassword) {
     const result = await pool.query('SELECT userid, username, password FROM UserTable WHERE username=$1', [username])
     if (result.rowCount === 1) {
         if (result.rows[0].password === providedPassword) {
-            console.log(`authenticateUser passwords match for username ${username}, password ${providedPassword}`);
+            console.log(`Users.authenticateUser: passwords match for username ${username}, password ${providedPassword}`);
             console.log(result.rows);
             return result.rows[0].userid;
         }
-        console.log(`authenticateUser: username '${username}', invalid password '${providedPassword}'.`);
+        console.log(`Users.authenticateUser: username '${username}', invalid password '${providedPassword}'.`);
         return null;
     }
-    console.log(`authenticateUser: user '${username}' DNE.`);
+    console.log(`Users.authenticateUser: user '${username}' DNE.`);
     return null;
 }
 

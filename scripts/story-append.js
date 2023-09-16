@@ -13,7 +13,6 @@ form.addEventListener('submit', async (event) => {
         }
     });
     const result = await response.json();
-    console.log(result);
 
     const feedback = document.getElementById("feedback");
     if (result.success) {

@@ -80,24 +80,16 @@ module.exports = {
 
     addStory: async function addStory(storytitle, storysettings) {
         // TODO: FIXME
-        console.log(`addStory: storytitle=${storytitle}, storysettings=${storysettings}`);
-        console.log(storysettings);
         // check username does not already exist
         let storyId = await this.getStoryId(storytitle);
-        console.log("seeing if story already exists...");
-        console.log(storyId);
         if (storyId === null || typeof storyId === "undefined") {
             // storyid, storytitle, inprogress, storysettings
-            console.log("about to query...");
             const result = await pool.query('INSERT INTO StoryTable (storytitle, inprogress, storysettings) VALUES ($1, TRUE, $2);', [storytitle, storysettings]);
-            console.log("should be added....");
-            console.log(result);
-            console.log(result.rows);
             storyId = await this.getStoryId(storytitle);
-            console.log("storyId after add?:");
-            console.log(storyId); 
+            console.log(`Story added to database! storyId=${storyId}`);
             return true;
         }
+        console.log(`Story.addStory: story already exists ${storytitle}`);
         return false;
     },
 
@@ -108,7 +100,7 @@ module.exports = {
     },
 
     setStoryInactive: async function setStoryInactive(storyid) {
-        console.log("setStoryInactive not yet implemented!");
-        return false;
+        const result = await pool.query('UPDATE storytable SET inprogress=false WHERE storyid=$1', [storyid]);
+        return true;
     }
 }

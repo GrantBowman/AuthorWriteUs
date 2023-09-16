@@ -1,52 +1,61 @@
-const userqueue = document.getElementById('userqueue');
-const sse = new EventSource("/writingsse");
-// EventSource.close()
+const userQueue = document.getElementById('userQueue');
+const sse = new EventSource("/writing-sse");
 
 sse.addEventListener("message", (event) => {
-    const data = event.data;
-    console.log("event =");
-    console.log(event);
-    console.log("event.data =");
+    const data = JSON.parse(event.data);
+    console.log("sse received:");
     console.log(data);
 
-    updateUserQueue(data);
+    if (data.users) {
+        updateUserQueue(data.users);
+    }
+    // sent: writer (T/F)
+    //   ^ if true, also send prevInput
+    if (data.isWriter !== "undefined") {
+        assignWriter(data.isWriter, data.previousInput);
+    }
 });
 
-function updateUserQueue(data) {
-    // clear user list since we about to re-display
-    userqueue.innerhtml = '';
+// Add an event listener for beforeunload or unload event
+window.addEventListener("beforeunload", function (event) {
 
-    data.users.forEach((user) => {
-        const listitem = Document.createElement("li");
-        listitem.textContent = user.username;
-        userqueue.appendChild(listitem);
+    // NOTE: this desync'd devices if said no to confirmation
+    // leave warning+confirmation (since replaces spot in queue)
+    // event.returnValue = "Are you sure you want to leave?";
+    sse.close()
+});
+
+function updateUserQueue(users) {
+    // clear user list since we about to re-display
+    while (userQueue.firstChild) {
+        userQueue.removeChild(userQueue.firstChild);
+    }
+    
+    users.forEach((user) => {
+        const listitem = document.createElement("li");
+        listitem.textContent = user;
+        userQueue.appendChild(listitem);
     });
 }
 
-/*
-const form = document.getElementById('signup-form');
-form.addEventListener('submit', async (event) => {
-    event.preventDefault();
+const previousInput = document.getElementById('previousInput');
+const writingInput = document.getElementById('writingInput');
+const submitBtn = document.getElementById('submitBtn');
+// show form and prev input if time to write, hide if not
+// if write: show: form, button, previousinput. hide: "waiting for your turn"
+// if not writer: hide form, button, previousinput. show "waiting for your turn"
+function assignWriter(isWriter, previousInputContent) {
+    if (isWriter) {
+        writingInput.style.display = '';
+        submitBtn.style.display = '';
 
-    // send to server and await its response to progress
-    const formData = new URLSearchParams(new FormData(form));
-    const response = await fetch('/signup-submitted', {
-        method: 'POST',
-        body: formData,
-        headers : {
-            'content-type' : 'application/x-www-form-urlencoded'
-        }
-    });
-    const result = await response.json();
+        previousInput.textContent = "Previous Input:\n\t" + previousInputContent;
 
-    const feedback = document.getElementById("feedback");
-    if (result.success) {
-        if (result.returnUrl) {
-            window.location.href = "/home";
-        }
     }
-    else {
-        feedback.textContent = "Error: " + result.message;
+    else if (!isWriter) {
+        writingInput.style.display = "none";
+        submitBtn.style.display = "none";
+
+        previousInput.textContent = "Please wait for your turn to write."
     }
-});
-*/
+}

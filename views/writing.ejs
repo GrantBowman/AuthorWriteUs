@@ -9,28 +9,23 @@
         <%- include('partials/current-user-header') %>
         <h1>Writing Desk</h1>
 
-        <h2><%= storytitle %></h2>
-        <ul id="userqueue">Queue (bottom=next/last?):</ul>
+        <h2><%= storyTitle %></h2>
+        <p>Queue (top=next):</p>
+        <ul id="userQueue"></ul>
 
-        
-        <% if (previousinput === null || typeof previousinput === "undefined") { %>
-            <p>This is the beginning of the story!</p>
-        <% } else { %>
-            <p>Previous input:</p>
-            <p><%= previousinput %></p>
-        <% } %>
-
+        <p id="previousInput"></p>
         
         <form id="append-form" accept-charset="utf-8">
             <% if (maxlength>=200) { %>
-                <p><input id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))[\.\?\!]" title="no trailing whitespace, and remember punctuation!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
+                <p><input style="display: none" id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))[\.\?\!]" title="no trailing whitespace, and remember punctuation!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
             <% } else { %>
-                <p><input id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))" title="no trailing whitespace!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
+                <p><input style="display: none" id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))" title="no trailing whitespace!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
             <% } %>
-                <p><input type="submit" value="Submit"></p>
+                <p><input style="display: none" id="submitBtn" type="submit" value="Submit"></p>
         </form>
             
         <p><a href="/home">Home</a></p>
         <script src="/scripts/story-append.js"></script>
+        <script src="/scripts/userqueue.js"></script>
     </body>
 </html>
