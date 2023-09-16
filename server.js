@@ -9,6 +9,7 @@ const Users = require("./controllers/Users.js");
 const Stories = require("./controllers/stories.js");
 const Quiries = require("./controllers/queries.js");
 const slugify = require("slugify");
+const SSE = require("express-sse");
 
 
 // routing
@@ -23,8 +24,9 @@ app.set("views", path.join(__dirname, "views"));
 const ip = process.env.SERVER_IP;
 const port = process.env.SERVER_PORT;
 
-// middleware
-
+////////////////
+// middleware //
+////////////////
 
 // espress-session (res.locals allows one-time use in views and such?)
 app.use(expressSession({
@@ -65,6 +67,10 @@ function isLoggedIn(req, res, next) {
 
 // routes
 
+/////////
+// GET //
+/////////
+
 app.get('/library', async (req, res) => {
     
     username = req.session.username;
@@ -73,7 +79,7 @@ app.get('/library', async (req, res) => {
 });
 
 app.get('/user/:username', async (req, res) => {
-    const username = slugify(req.params.username);
+    const username = req.params.username;
     const userid = await Users.getUserId(username);
     if (userid === null) {
         res.status(404).send("User does not exist.");
@@ -84,11 +90,15 @@ app.get('/user/:username', async (req, res) => {
 });
 
 app.get('/story/:storytitle', async (req, res) => {
-    const storytitle = slugify(req.params.storytitle, " ", {upper: true});
+    // const storytitle = slugify(req.params.storytitle, " ", {upper: true});
+    // const storytitle = decodeURI(req.params.storytitle);// slugify(req.params.storytitle, " ", {upper: true});
+    const storytitle = req.params.storytitle;
     const storyid = await Stories.getStoryId(storytitle);
+    console.log(req.params.storytitle)
+    console.log(storytitle)
+    console.log(storyid)
 
     // check story exists. only continue to render a story page if that story exists
-    console.log(`/story/${req.params.storytitle} storyid = ${storyid}`);
     if (storyid === null || typeof storyid === "undefined") {
         res.status(404).send("Story does not exist.");
         return;
@@ -100,14 +110,15 @@ app.get('/story/:storytitle', async (req, res) => {
     res.render('story', {username, storytitle, storycontent, authors});
 });
 
-
 app.get('/writing/:storytitle', isLoggedIn, async (req, res) => {
-    const storytitle = slugify(req.params.storytitle, " ", {upper: true});
+    // const storytitle = slugify(req.params.storytitle, " ", {upper: true});
+    const storytitle = req.params.storytitle;
     const storyid = await Stories.getStoryId(storytitle);
     
     // check story exists. only continue to render a story page if that story exists
-    console.log(`/story/${req.params.storytitle} storyid = ${storyid}`);
-    if (storyid === null || typeof storyid === "undefined") {
+    console.log(`storytitle = '${storytitle}'`);
+    console.log(`storyid = ${storyid}`);
+    if (!storyid) {
         res.status(404).send("Story does not exist.");
         return;
     }
@@ -119,9 +130,15 @@ app.get('/writing/:storytitle', isLoggedIn, async (req, res) => {
         return;
     }
 
-    const previousinput = await Stories.getPreviousInput(storyid);
+    const previousinputresult = await Stories.getPreviousInput(storyid);
+    let previousinput;
+    if (previousinputresult) {
+        previousinput = previousinputresult.content;
+    }
     const storysettingsresult = await Stories.getStorySettings(storyid);
     const storysettings = storysettingsresult.storysettings;
+    console.log(`previousinput = ${previousinput}`);
+    console.log(`storysettings = ${storysettings}`);
 
     let maxlength;
     switch(storysettings.inputLength) {
@@ -171,6 +188,9 @@ app.get("/scripts/:filename", (req, res) => {
     });
 });
 
+//////////
+// POST //
+//////////
 
 app.post("/login-submitted", async (req, res) => {
     console.log(req.body);
@@ -267,7 +287,7 @@ app.post("/signup-submitted", async (req, res) => {
     return;
 });
     
-app.post("/create-story", async (req, res) => {
+app.post("/story-create", async (req, res) => {
     console.log(req.body);
     let {storyTitle, ...storysettings} = req.body;
     console.log(storysettings);
@@ -295,11 +315,52 @@ app.post("/create-story", async (req, res) => {
     // navigate to writing page?    
 });
 
-app.post("/append-story", (req, res) => {
-    console.log("POST /append-story not yet implented!");
-    res.status(200).send();
+app.post("/story-append", async (req, res) => {
+    // console.log("POST /append-story not yet implented!");
+    const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
+    console.log(`storytitle = ${storyTitle}`);
+    // console.log(storyTitle);
+    const content = req.body.content;
+    console.log(`content = ${content}`);
+
+    // check story exists (sanity check) / get storyid
+    const storyid = await Stories.getStoryId(storyTitle)
+    console.log(`storyid=${storyid}`)
+    // check story content not null
+    if (!content) {
+        console.log(`story-append does not have content for '${storyTitle}':'${content}'`)
+    }
+
+    // get latest index of story
+    const previousinputresult = await Stories.getPreviousInput(storyid);
+    let previousinputorder = 0;
+    if (previousinputresult) {
+        previousinputorder = previousinputresult.inputorder;
+    }
+    console.log(`previousinputorder = ${previousinputorder}`);
+
+    
+    const username = req.session.username;
+    const userid = await Users.getUserId(username);
+
+    // insert into storycontenttable with storyid
+    console.log(`ready to add to database:`)
+    console.log(`storyid=${storyid}`)
+    console.log(`userid=${userid}`)
+    console.log(`inputorder=${previousinputorder+1}`)
+    console.log(`content=${content}`)
+    // refresh the page (should auto-update latest input)
+    Stories.appendStory(storyid, userid, previousinputorder+1, content);
+    const data = {
+        success : true,
+        message : "Added to story successfully!"
+    }
+    res.status(200).json(data);
 });
 
+//////////////
+// defaults //
+//////////////
 
 // order matters
 
@@ -310,6 +371,12 @@ app.use(express.static("public"));
 app.use((req, res) => {
     res.status(404).send("Page not found");
 });
+
+function createsse (req, res) {
+    // SO says I dont need a fancy librarby/package/module, so trying out the basics ofc!
+    // https://stackoverflow.com/questions/34657222/how-to-use-server-sent-events-in-express-js
+    // TODO
+}
 
 app.listen(port, ip, () => {
     console.log(`Server is running at http://${ip}:${port}`);

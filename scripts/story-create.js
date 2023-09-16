@@ -5,7 +5,7 @@ form.addEventListener('submit', async (event) => {
 
     // send data to server and awaits it response to progress
     const formData = new URLSearchParams(new FormData(form));
-    const response = await fetch('/create-story', {
+    const response = await fetch('/story-create', {
         method: 'POST',
         body: formData,
         headers : {
@@ -17,7 +17,9 @@ form.addEventListener('submit', async (event) => {
 
     const feedback = document.getElementById("feedback");
     if (result.success) {
-        window.location.href = result.returnUrl;
+        if (result.returnUrl) {
+            window.location.href = result.returnUrl;
+        }
     }
     else {
         feedback.textContent = result.message;

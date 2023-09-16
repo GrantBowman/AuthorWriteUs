@@ -69,7 +69,7 @@ module.exports = {
     },
 
     getPreviousInput: async function getPreviousInput(storyid) {
-        const result = await pool.query('SELECT content FROM storycontenttable WHERE storyid=$1 ORDER BY inputorder DESC LIMIT 1', [storyid]);
+        const result = await pool.query('SELECT inputorder, content FROM storycontenttable WHERE storyid=$1 ORDER BY inputorder DESC LIMIT 1', [storyid]);
         return result.rows[0];
     },
 
@@ -101,8 +101,10 @@ module.exports = {
         return false;
     },
 
-    appendStory: async function appendStory(storyid, userid, content, ) {
+    appendStory: async function appendStory(storyid, userid, inputorder, content) {
         // storycontenttable
+        const result = await pool.query('INSERT INTO StoryContentTable (storyId, userId, inputOrder, content) VALUES ($1, $2, $3, $4)', [storyid, userid, inputorder, content]);
+        return true
     },
 
     setStoryInactive: async function setStoryInactive(storyid) {

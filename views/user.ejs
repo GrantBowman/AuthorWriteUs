@@ -11,7 +11,7 @@
         <h2>Stories Authored:</h2>
         <ul>
             <% for (const story of stories) { %>
-                <li><a href="/story/<%= story.storytitle%>"><%= story.storytitle %></a></li>
+                <li><a href="/story/<%= encodeURI(story.storytitle) %>"><%= story.storytitle %></a></li>
             <% } %>
         </ul>
         <p><a href="/home">Home</a></p>

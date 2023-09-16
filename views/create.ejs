@@ -11,7 +11,7 @@
     <h1>Story Settings</h1>
     <form id="create-form">
         <label for="storyTitle">The title of my story is</label>
-        <input id="storyTitle" name="storyTitle" type="text" placeholder="Story Title" required>
+        <input id="storyTitle" name="storyTitle" type="text" pattern="(\S.*\S)||(\S)" placeholder="Story Title" required>
         
         <br>
         <label for="inputLength">I want to build this story</label>
@@ -49,6 +49,6 @@
     </form>
 
     <p><a href="./home">Home</a></p>
-    <script src="/scripts/create-story.js"></script>
+    <script src="/scripts/story-create.js"></script>
 </body>
 

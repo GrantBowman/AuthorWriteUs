@@ -10,6 +10,8 @@
         <h1>Writing Desk</h1>
 
         <h2><%= storytitle %></h2>
+        <ul id="userqueue">Queue (bottom=next/last?):</ul>
+
         
         <% if (previousinput === null || typeof previousinput === "undefined") { %>
             <p>This is the beginning of the story!</p>
@@ -19,11 +21,16 @@
         <% } %>
 
         
-        <form id="writing-form" action="./writing-submitted" method="POST" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-            <p><input id="writingInput" type="text" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
-            <p><input type="submit" value="Submit"></p>
+        <form id="append-form" accept-charset="utf-8">
+            <% if (maxlength>=200) { %>
+                <p><input id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))[\.\?\!]" title="no trailing whitespace, and remember punctuation!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
+            <% } else { %>
+                <p><input id="writingInput" name="content" type="text" pattern="((\S.*\S)||(\S))" title="no trailing whitespace!" placeholder="Write!" maxlength="<%= maxlength %>" required></p>
+            <% } %>
+                <p><input type="submit" value="Submit"></p>
         </form>
             
-        <p><a href="/home">Leave</a></p>
+        <p><a href="/home">Home</a></p>
+        <script src="/scripts/story-append.js"></script>
     </body>
 </html>

@@ -1,6 +1,29 @@
-const signupHeader = document.getElementById('signup-header');
-signupHeader.textContent = "Sign Up Here!"
+const userqueue = document.getElementById('userqueue');
+const sse = new EventSource("/writingsse");
+// EventSource.close()
 
+sse.addEventListener("message", (event) => {
+    const data = event.data;
+    console.log("event =");
+    console.log(event);
+    console.log("event.data =");
+    console.log(data);
+
+    updateUserQueue(data);
+});
+
+function updateUserQueue(data) {
+    // clear user list since we about to re-display
+    userqueue.innerhtml = '';
+
+    data.users.forEach((user) => {
+        const listitem = Document.createElement("li");
+        listitem.textContent = user.username;
+        userqueue.appendChild(listitem);
+    });
+}
+
+/*
 const form = document.getElementById('signup-form');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -26,3 +49,4 @@ form.addEventListener('submit', async (event) => {
         feedback.textContent = "Error: " + result.message;
     }
 });
+*/

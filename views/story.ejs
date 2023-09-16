@@ -15,7 +15,7 @@
         <h2>Authors:</h2>
         <ul>
             <% for (const user of authors) { %>
-                <li><a href="/user/<%= user.username %>"><%= user.username %></a></li>
+                <li><a href="/user/<%= encodeURI(user.username) %>"><%= user.username %></a></li>
             <% } %>
         </ul>
         <p><a href="/home">Home</a></p>

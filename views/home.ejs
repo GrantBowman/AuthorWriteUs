@@ -14,7 +14,7 @@
         <h2>In-progress Stories:</h2>
         <ul>
             <% for (const story of stories) { %>
-                <li><a href="/story/<%= story.storytitle%>"><%= story.storytitle %></a></li>
+                <li><a href="/writing/<%= encodeURI(story.storytitle) %>"><%= story.storytitle %></a></li>
             <% } %>
         </ul>
         <!-- <table>
