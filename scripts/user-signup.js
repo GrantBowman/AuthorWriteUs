@@ -18,9 +18,7 @@ form.addEventListener('submit', async (event) => {
 
     const feedback = document.getElementById("feedback");
     if (result.success) {
-        if (result.returnUrl) {
-            window.location.href = "/home";
-        }
+        window.location.href = "/home";
     }
     else {
         feedback.textContent = "Error: " + result.message;

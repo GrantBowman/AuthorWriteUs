@@ -35,7 +35,7 @@ app.use(expressSession({
 
 
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url} from ${req.socket.remoteAddress}`);
+    console.log(`${req.socket.remoteAddress}: ${req.method} ${req.url} `);
 
     res.locals.session = req.session;
     next();
@@ -88,11 +88,20 @@ app.get('/story/:storyTitle', async (req, res) => {
         res.status(404).send("Story does not exist.");
         return;
     }
+    
+    // only allow if the story is inactive, else 403
+    const isActive = await Stories.isActiveStory(storyId);
+    if (isActive) {
+        res.status(403).send("Story is being written still!");
+        return;
+    }
 
     const storycontent = await Stories.getStoryContent(storyId);
     const authors = await Quiries.getUsernamesByStory(storyId);
+    const storysettingsresult = await Stories.getStorySettings(storyId);
+    const prompt = storysettingsresult.storysettings.prompt;
     username = req.session.username;
-    res.render('story', { username, storyTitle, storycontent, authors });
+    res.render('story', { username, storyTitle, storycontent, authors, prompt });
 });
 
 app.get('/writing/:storyTitle', isLoggedIn, async (req, res) => {
@@ -119,16 +128,17 @@ app.get('/writing/:storyTitle', isLoggedIn, async (req, res) => {
     }
     const storysettingsresult = await Stories.getStorySettings(storyId);
     const storysettings = storysettingsresult.storysettings;
+    const prompt = storysettings.prompt;
 
     let maxlength;
     switch (storysettings.inputLength) {
-        case "word":
+        case "word-by-word":
             maxlength = 20;
             break;
-        case "line":
+        case "line-by-line":
             maxlength = 200;
             break;
-        case "paragraph":
+        case "paragraph-by-paragraph":
             maxlength = 1000;
             break;
         default:
@@ -140,7 +150,7 @@ app.get('/writing/:storyTitle', isLoggedIn, async (req, res) => {
     const storycontent = await Stories.getStoryContent(storyId);
     const authors = await Quiries.getUsernamesByStory(storyId);
     username = req.session.username;
-    res.render('writing', { username, storyTitle, previousinput, maxlength });
+    res.render('writing', { username, storyTitle, previousinput, maxlength, prompt });
 });
 
 app.get('/home', async (req, res) => {
@@ -302,7 +312,8 @@ app.post("/story-create", async (req, res) => {
     console.log(`story added: result=${result}`);
     data = {
         success: true,
-        message: "Story created successfully!"
+        message: "Story created successfully!",
+        returnUrl: "/writing/"+storyTitle
     }
     res.status(200).json(data);
 
@@ -338,9 +349,24 @@ app.post("/story-append", async (req, res) => {
 
     // sql
     const result = await Stories.appendStory(storyId, userId, previousinputorder + 1, content);
+
+    // check if story complete
+    const storysettingsresult = await Stories.getStorySettings(storyId);
+    const storysettings = storysettingsresult.storysettings;
+
+    let returnUrl = null;
+    // catches === and any remaining from development
+    if (storysettings.numInputs <= previousinputorder+1) {
+        Stories.setStoryInactive(storyId);
+        // kick user out of writing page to story page
+        returnUrl = "/story/" + storyTitle;
+        finishStoryQueue(storyId, returnUrl);
+    }
+
     const data = {
         success: true,
-        message: "Added to story successfully!"
+        message: "Added to story successfully!",
+        returnUrl: returnUrl
     }
     res.status(200).json(data);
     
@@ -409,6 +435,12 @@ function toBackInStoryQueue(storyId, username) {
     }
 }
 
+function finishStoryQueue(storyId, returnUrl) {
+    storyQueue[storyId].forEach(async (obj) => {
+        obj.res.write(`data: ${JSON.stringify({ returnUrl: returnUrl })}\n\n`);
+    });
+}
+
 function getQueueUsernames(arr) {
     result = [];
     arr.forEach((item) => {
@@ -432,7 +464,8 @@ function resendStoryQueue(req, res, storyId) {
         // allow first in queue to write
         if (obj.username === arr[0]) {
             const previousinputresult = await Stories.getPreviousInput(storyId);
-            obj.res.write(`data: ${JSON.stringify({ isWriter: true, previousInput: previousinputresult.content })}\n\n`); // res.write() instead of res.send()
+            let content = previousinputresult? previousinputresult.content: "(write the first input!)";
+            obj.res.write(`data: ${JSON.stringify({ isWriter: true, previousInput: content })}\n\n`); // res.write() instead of res.send()
         }
         else {
             obj.res.write(`data: ${JSON.stringify({ isWriter: false, previousInput: "" })}\n\n`); // res.write() instead of res.send()

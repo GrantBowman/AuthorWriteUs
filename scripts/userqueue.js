@@ -14,6 +14,9 @@ sse.addEventListener("message", (event) => {
     if (data.isWriter !== "undefined") {
         assignWriter(data.isWriter, data.previousInput);
     }
+    if (data.returnUrl) {
+        window.location.href = "/home";
+    }
 });
 
 // Add an event listener for beforeunload or unload event

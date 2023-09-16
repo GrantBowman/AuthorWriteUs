@@ -11,6 +11,7 @@
     <body>
         <%- include('partials/current-user-header') %>
         <h1><%= storyTitle %></h1>
+        <h3>Prompt: <%= prompt %></h3>
         <p><%= storycontent %></p>
         <h2>Authors:</h2>
         <ul>
@@ -18,6 +19,7 @@
                 <li><a href="/user/<%= encodeURI(user.username) %>"><%= user.username %></a></li>
             <% } %>
         </ul>
+        <p><a href="/library">View Library</a></p>
         <p><a href="/home">Home</a></p>
     </body>
 </html>
