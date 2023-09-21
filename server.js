@@ -36,7 +36,7 @@ app.use(expressSession({
 
 
 app.use((req, res, next) => {
-    console.log(`${req.socket.remoteAddress}: ${req.method} ${req.url} `);
+    console.log(`${req.rawHeaders[req.rawHeaders.indexOf("Host")+1]}: ${req.method} ${req.url}`);
 
     res.locals.session = req.session;
     next();
