@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 const Users = require("./controllers/Users.js");
 const Stories = require("./controllers/stories.js");
 const Quiries = require("./controllers/queries.js");
+require('dotenv').config();
 
 
 // routing
@@ -450,7 +451,10 @@ function getQueueUsernames(arr) {
 }
 
 function resendStoryQueue(req, res, storyId) {
-    
+    if (!storyId) {
+        return;
+    }
+
     //update other writing users
     let arr = getQueueUsernames(storyQueue[storyId]);
     // if was last user in story queue, queue no longer exists - no updates needed
