@@ -5,7 +5,7 @@ const qs = require('querystring');
 const express = require("express");
 const expressSession = require("express-session");
 const cookieParser = require("cookie-parser");
-const Users = require("./controllers/Users.js");
+const Users = require("./controllers/users.js");
 const Stories = require("./controllers/stories.js");
 const Quiries = require("./controllers/queries.js");
 require('dotenv').config();
