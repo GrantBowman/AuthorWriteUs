@@ -1,0 +1,6 @@
+.error-box {
+    display: inline-block;
+    border-style: solid;
+    padding: 2px;
+    background-color: red;
+}

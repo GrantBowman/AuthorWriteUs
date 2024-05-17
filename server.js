@@ -5,10 +5,10 @@ const qs = require('querystring');
 const express = require("express");
 const expressSession = require("express-session");
 const cookieParser = require("cookie-parser");
+require('dotenv').config();
 const Users = require("./controllers/users.js");
 const Stories = require("./controllers/stories.js");
 const Quiries = require("./controllers/queries.js");
-require('dotenv').config();
 
 
 // routing
@@ -23,9 +23,29 @@ app.set("views", path.join(__dirname, "views"));
 const ip = process.env.SERVER_IP;
 const port = process.env.SERVER_PORT;
 
+///////
+// error catching, because ima  scrub who wants them not to exist yet be super generic
+/////
+async function errorCatcher(promise) {
+    try {
+        const data = await promise;
+        return {data: data, error: null}
+    }
+    catch (err) {
+        return {data: null, error: err.message}
+    }
+}
+
 ////////////////
 // middleware //
 ////////////////
+
+// //error handling middleware
+// app.use((err, req, res, next) => {
+//     console.error("An error occured:\n", err);
+//     res.status(500).send("Internal Server Error");
+//     next();
+// });
 
 // espress-session (res.locals allows one-time use in views and such?)
 app.use(expressSession({
@@ -63,26 +83,50 @@ function isLoggedIn(req, res, next) {
 /////////
 
 app.get('/library', async (req, res) => {
-
-    username = req.session.username;
-    const stories = await Stories.getInactiveStoryTitles();
-    res.render('library', { username, stories });
+    try {
+        username = req.session.username;
+        const stories = await Stories.getInactiveStoryTitles();
+        res.render('library', { username, stories });
+    }
+    catch (err) {
+        console.error(`Unable to get inactive stories`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
+    }
 });
 
 app.get('/user/:username', async (req, res) => {
-    const username = req.params.username;
-    const userId = await Users.getUserId(username);
-    if (userId === null) {
-        res.status(404).send("User does not exist.");
+    try {
+        const username = req.params.username;
+        const userId = await Users.getUserId(username);
+        if (userId === null) {
+            res.status(404).send("User does not exist.");
+            return;
+        }
+        const stories = await Quiries.getStoriesByUser(userId);
+        res.render('user', { username, stories });
+    }
+    catch (err) {
+        console.error(`Unable to get stories for user=${username}`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
         return;
     }
-    const stories = await Quiries.getStoriesByUser(userId);
-    res.render('user', { username, stories });
 });
 
 app.get('/story/:storyTitle', async (req, res) => {
     const storyTitle = req.params.storyTitle;
-    const storyId = await Stories.getStoryId(storyTitle);
+    let storyId;
+    try {
+        storyId = await Stories.getStoryId(storyTitle);
+    }
+    catch (err) {
+        console.error(`Unable to get storyId for storyTitle='${storyTitle}'`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
+    }
 
     // check story exists. only continue to render a story page if that story exists
     if (storyId === null || typeof storyId === "undefined") {
@@ -107,7 +151,16 @@ app.get('/story/:storyTitle', async (req, res) => {
 
 app.get('/writing/:storyTitle', isLoggedIn, async (req, res) => {
     const storyTitle = req.params.storyTitle;
-    const storyId = await Stories.getStoryId(storyTitle);
+    let storyId;
+    try {
+        storyId = await Stories.getStoryId(storyTitle);
+    }
+    catch (err) {
+        console.error(`Unable to get storyId for storyTitle='${storyTitle}'`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
+    }
 
     // check story exists. only continue to render a story page if that story exists
     if (!storyId) {
@@ -116,48 +169,75 @@ app.get('/writing/:storyTitle', isLoggedIn, async (req, res) => {
     }
 
     // only allow if the story is active, else 403
-    const isActive = await Stories.isActiveStory(storyId);
+    let isActive;
+    try {
+        isActive = await Stories.isActiveStory(storyId);
+    }
+    catch (err) {
+        console.error(`Unable get story status for storyId=${storyId}`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
+    }
+    
     if (!isActive) {
         res.status(403).send("Story is completed.");
         return;
     }
+    
+    try {
+        // get information to render the writing page
+        const previousinputresult = await Stories.getPreviousInput(storyId);
+        let previousinput;
+        if (previousinputresult) {
+            previousinput = previousinputresult.content;
+        }
+        const storysettingsresult = await Stories.getStorySettings(storyId);
+        const storysettings = storysettingsresult.storysettings;
+        const prompt = storysettings.prompt;
 
-    const previousinputresult = await Stories.getPreviousInput(storyId);
-    let previousinput;
-    if (previousinputresult) {
-        previousinput = previousinputresult.content;
+        let maxlength;
+        switch (storysettings.inputLength) {
+            case "word-by-word":
+                maxlength = 20;
+                break;
+            case "line-by-line":
+                maxlength = 200;
+                break;
+            case "paragraph-by-paragraph":
+                maxlength = 1000;
+                break;
+            default:
+                maxlength = 200;
+                break;
+        }
+
+
+        const storycontent = await Stories.getStoryContent(storyId);
+        const authors = await Quiries.getUsernamesByStory(storyId);
+        username = req.session.username;
+        res.render('writing', { username, storyTitle, previousinput, maxlength, prompt });
     }
-    const storysettingsresult = await Stories.getStorySettings(storyId);
-    const storysettings = storysettingsresult.storysettings;
-    const prompt = storysettings.prompt;
-
-    let maxlength;
-    switch (storysettings.inputLength) {
-        case "word-by-word":
-            maxlength = 20;
-            break;
-        case "line-by-line":
-            maxlength = 200;
-            break;
-        case "paragraph-by-paragraph":
-            maxlength = 1000;
-            break;
-        default:
-            maxlength = 200;
-            break;
+    catch (err) {
+        console.error(`Unable to gather data for rendering writing page for storyId=${storyId}`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
     }
-
-
-    const storycontent = await Stories.getStoryContent(storyId);
-    const authors = await Quiries.getUsernamesByStory(storyId);
-    username = req.session.username;
-    res.render('writing', { username, storyTitle, previousinput, maxlength, prompt });
 });
 
 app.get('/home', async (req, res) => {
     const username = req.session.username;
-    const stories = await Stories.getActiveStoryTitles();
-    res.render('home', { username, stories });
+    let stories = [];
+    let storiesError = null;
+    try {
+        stories = await Stories.getActiveStoryTitles();
+    }
+    catch (err) {
+        console.log(err);
+        storiesError = err.userMessage;
+    }
+    res.render('home', { username, stories, storiesError });
 });
 
 app.get("/create", isLoggedIn, (req, res) => {
@@ -167,14 +247,22 @@ app.get("/create", isLoggedIn, (req, res) => {
 
 app.get("/writing-sse", async (req, res) => {
 
-    createSse(req, res);
-    const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
-    const storyId = await Stories.getStoryId(storyTitle);
-    const username = req.session.username;
-    addToStoryQueue(storyId, username, res);
-    
-    resendStoryQueue(req, res, storyId);
+    try {
 
+        createSse(req, res);
+        const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
+        const storyId = await Stories.getStoryId(storyTitle);
+        const username = req.session.username;
+        addToStoryQueue(storyId, username, res);
+        
+        resendStoryQueue(req, res, storyId);
+    }
+    catch (err) {
+        console.error(`Unable to initialise writing-SSE for user ${username} and story ${storyId}`);
+        console.error(err);
+        res.status(500).redirect('/error-page.html');
+        return;
+    }
 });
 
 app.get("/scripts/:filename", (req, res) => {
@@ -190,6 +278,19 @@ app.get("/scripts/:filename", (req, res) => {
     });
 });
 
+app.get("/styles/:filename", (req, res) => {
+    const filepath = path.join(__dirname, "styles", req.params.filename);
+
+    fs.readFile(filepath, "utf8", (err, data) => {
+        if (err) {
+            res.status(404).send("File not found.");
+        }
+        else {
+            res.status(200).type("text/css").send(data);
+        }
+    });
+});
+
 //////////
 // POST //
 //////////
@@ -198,7 +299,22 @@ app.post("/login-submitted", async (req, res) => {
     console.log(req.body);
     const { username, password } = req.body;
 
-    const userId = await Users.authenticateUser(username, password);
+    let userId;
+    try {
+        userId = await Users.authenticateUser(username, password);
+    }
+    catch (err) {
+        console.error(`Unable to authenticate user '${username}'`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to authenticate user '${username}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
+
     if (userId) {
         console.log(`valid login, userId=${userId}`);
         req.session.username = username;
@@ -226,15 +342,30 @@ app.post("/login-submitted", async (req, res) => {
 
 app.post('/logout', async (req, res) => {
     
-    const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
-    const storyId = await Stories.getStoryId(storyTitle);
     const username = req.session.username;
-    removeFromStoryQueue(storyId, username);
-    resendStoryQueue(req, res, storyId);
+    const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
+    try {
+        const storyId = await Stories.getStoryId(storyTitle);
+        removeFromStoryQueue(storyId, username);
+        resendStoryQueue(req, res, storyId);
+        req.session.destroy();
+        // res.status(200).redirect('/login.html');
+        res.status(200).redirect(req.url);
+        return;
+    }
+    catch (err) {
+        console.error(`Unable to logout user ${username}`);
+        console.error(err);
+        req.session.destroy();
+        data = {
+            success: false,
+            message: `Unable to logout user '${username}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
 
-    req.session.destroy();
-    // res.status(200).redirect('/login.html');
-    res.status(200).redirect(req.url);
 });
 
 app.post("/signup-submitted", async (req, res) => {
@@ -247,7 +378,8 @@ app.post("/signup-submitted", async (req, res) => {
             success: false,
             message: "Invalid username format. Please use alphanumeric."
         }
-        return res.status(400).json(data);
+        res.status(400).json(data);
+        return;
     }
 
     // Validate username (no spaces)
@@ -270,54 +402,93 @@ app.post("/signup-submitted", async (req, res) => {
         return;
     }
 
-    // check user doesnt already exist
-    const userId = await Users.getUserId(username);
-    if (userId) {
-        console.log(`user already exists: userId=${userId}`);
-        data = {
-            success: false,
-            message: "Username already taken."
+    try {
+        // check user doesnt already exist
+        const userId = await Users.getUserId(username);
+        if (userId) {
+            console.log(`user already exists: userId=${userId}`);
+            data = {
+                success: false,
+                message: "Username already taken."
+            }
+            res.status(400).json(data);
+            return;
         }
-        res.status(400).json(data);
+            
+        // add user
+        const result = await Users.addUser(username, password);
+        console.log(`user added: result=${result}`);
+        req.session.username = username;
+        data = {
+            success: true,
+            message: "User registered successfully!"
+        }
+        res.status(200).json(data);
         return;
     }
-    
-    // add user
-    const result = await Users.addUser(username, password);
-    console.log(`user added: result=${result}`);
-    req.session.username = username;
-    data = {
-        success: true,
-        message: "User registered successfully!"
+    catch (err) {
+        console.error(`Unable to signup user ${username}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to signup user '${username}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
     }
-    res.status(200).json(data);
-    return;
 });
 
 app.post("/story-create", async (req, res) => {
     let { storyTitle, ...storysettings } = req.body;
 
-    // check story doesnt not already exist
-    let storyId = await Stories.getStoryId(storyTitle);
-    if (storyId) {
-        console.log(`story already exists: storyId=${storyId}`);
+    try {
+        // check story doesnt not already exist
+        let storyId = await Stories.getStoryId(storyTitle);
+        if (storyId) {
+            console.log(`story already exists: storyId=${storyId}`);
+            data = {
+                success: false,
+                message: "Story title already exists."
+            }
+            res.status(400).json(data);
+            return;
+        }
+    }
+    catch (err) {
+        console.error("Unable to get Story ID for story creation.");
+        console.error(err);
         data = {
             success: false,
-            message: "Story title already exists."
+            message: `Unable to get Story ID for story creation.`,
+            returnUrl: '/error-page.html'
         }
-        res.status(400).json(data);
+        res.status(500).json(data);
         return;
     }
 
-    const result = await Stories.addStory(storyTitle, storysettings);
-    console.log(`story added: result=${result}`);
-    data = {
-        success: true,
-        message: "Story created successfully!",
-        returnUrl: "/writing/"+storyTitle
+    try {
+        const result = await Stories.addStory(storyTitle, storysettings);
+        console.log(`story added: result=${result}`);
+        data = {
+            success: true,
+            message: "Story created successfully!",
+            returnUrl: "/writing/"+storyTitle
+        }
+        res.status(200).json(data);
     }
-    res.status(200).json(data);
-
+    catch (err) {
+        console.error(`Unable to add storyTitle='${storyTitle}'`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to add story '${storyTitle}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
+    
     // navigate to writing page?    
 });
 
@@ -325,43 +496,113 @@ app.post("/story-append", async (req, res) => {
     const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
     const content = req.body.content;
 
-    // check story exists (sanity check) / get storyId
-    const storyId = await Stories.getStoryId(storyTitle)
-    // check story content not null
-    if (!content) {
-        console.log(`story-append does not have content for '${storyTitle}':'${content}'`);
-        const data = {
-            success: false,
-            message: "No content given to append to story."
+    let storyId;
+    try {
+        // check story exists (sanity check) / get storyId
+        storyId = await Stories.getStoryId(storyTitle)
+        // check story content not null
+        if (!content) {
+            console.log(`story-append does not have content for '${storyTitle}':'${content}'`);
+            const data = {
+                success: false,
+                message: "No content given to append to story."
+            }
+            res.status(400).json(data);
         }
-        res.status(400).json(data);
+    }
+    catch (err) {
+        console.error(`Unable to get storyId to append to ${storyTitle}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to get storyId to append to storyTitle='${storyTitle}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
     }
 
-    // get latest index of story
-    const previousinputresult = await Stories.getPreviousInput(storyId);
-    let previousinputorder = 0;
-    if (previousinputresult) {
-        previousinputorder = previousinputresult.inputorder;
+    let previousinputresult
+    try {
+        // get latest index of story
+        previousinputresult = await Stories.getPreviousInput(storyId);
+        let previousinputorder = 0;
+        if (previousinputresult) {
+            previousinputorder = previousinputresult.inputorder;
+        }
+    }
+    catch (err) {
+        console.error(`Unable to add story ${storyTitle}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to add story storyTitle='${storyTitle}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
     }
 
     // get userid for sql
     const username = req.session.username;
-    const userId = await Users.getUserId(username);
+    let userId;
+    try {
+        userId = await Users.getUserId(username);
+    }
+    catch (err) {
+        console.error(`Unable to get userId for ${username}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to get userId for username='${username}'`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
 
     // sql
-    const result = await Stories.appendStory(storyId, userId, previousinputorder + 1, content);
+    let result;
+    try {
+        result = await Stories.appendStory(storyId, userId, previousinputorder + 1, content);
+    }
+    catch (err) {
+        console.error(`Unable to append to story storyId=${storyId} from userId=${userId}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to append to story storyId=${storyId} from userId=${userId}`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
 
     // check if story complete
-    const storysettingsresult = await Stories.getStorySettings(storyId);
-    const storysettings = storysettingsresult.storysettings;
-
+    let storysettingsresult;
     let returnUrl = null;
-    // catches === and any remaining from development
-    if (storysettings.numInputs <= previousinputorder+1) {
-        Stories.setStoryInactive(storyId);
-        // kick user out of writing page to story page
-        returnUrl = "/story/" + storyTitle;
-        finishStoryQueue(storyId, returnUrl);
+    try {
+        storysettingsresult = await Stories.getStorySettings(storyId);
+        const storysettings = storysettingsresult.storysettings;
+    
+        // catches === and any remaining from development
+        if (storysettings.numInputs <= previousinputorder+1) {
+            Stories.setStoryInactive(storyId);
+            // kick user out of writing page to story page
+            returnUrl = "/story/" + storyTitle;
+            finishStoryQueue(storyId, returnUrl);
+        }
+    }
+    catch (err) {
+        console.error(`Unable to get story settings for storyId=${storyId}`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to get story settings for storyId=${storyId}`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
     }
 
     const data = {
@@ -372,7 +613,20 @@ app.post("/story-append", async (req, res) => {
     res.status(200).json(data);
     
     // refresh the page (should auto-update latest input)
-    resendStoryQueue(req, res, storyId);
+    try {
+        resendStoryQueue(req, res, storyId);
+    }
+    catch (err) {
+        console.error(`Unable to resend the story queue`);
+        console.error(err);
+        data = {
+            success: false,
+            message: `Unable to resend the story queue`,
+            returnUrl: '/error-page.html'
+        }
+        res.status(500).json(data);
+        return;
+    }
 });
 
 
@@ -467,9 +721,16 @@ function resendStoryQueue(req, res, storyId) {
 
         // allow first in queue to write
         if (obj.username === arr[0]) {
-            const previousinputresult = await Stories.getPreviousInput(storyId);
-            let content = previousinputresult? previousinputresult.content: "(write the first input!)";
-            obj.res.write(`data: ${JSON.stringify({ isWriter: true, previousInput: content })}\n\n`); // res.write() instead of res.send()
+            try {
+                const previousinputresult = await Stories.getPreviousInput(storyId);
+                let content = previousinputresult? previousinputresult.content: "(write the first input!)";
+                obj.res.write(`data: ${JSON.stringify({ isWriter: true, previousInput: content })}\n\n`); // res.write() instead of res.send()
+            }
+            catch (err) {
+                console.error(`Unable to get preivous story input for ${storyId}`);
+                console.error(err);
+                throw err;
+            }
         }
         else {
             obj.res.write(`data: ${JSON.stringify({ isWriter: false, previousInput: "" })}\n\n`); // res.write() instead of res.send()
@@ -492,17 +753,33 @@ function createSse(req, res) {
 
     // If client closes connection, stop sending events
     res.on('close', async () => {
-        console.log(`sse dropped by ${req.socket.remoteAddress}`);
-        const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
-        const storyId = await Stories.getStoryId(storyTitle)
-        resendStoryQueue(req, res, storyId);
-        // clearInterval(interValID);
-        res.end();
+        try {
+            console.log(`sse dropped by ${req.socket.remoteAddress}`);
+            const storyTitle = decodeURI(req.get('referer').split('/').at(-1));
+            const storyId = await Stories.getStoryId(storyTitle)
+            resendStoryQueue(req, res, storyId);
+            // clearInterval(interValID);
+            res.end();
+        }
+        catch (err) {
+            console.error(`Unable to add story ${storyTitle}`);
+            console.error(err);
+            res.status(500).redirect('/error-page.html');
+            return;
+        }
     });
 
 
 }
 
-app.listen(port, ip, () => {
-    console.log(`Server is running at http://${ip}:${port}`);
+app.get('/', (req, res) => {
+    res.json({message: "example response"});
 });
+
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+});
+
+// app.listen(port, ip, () => {
+//     console.log(`Server is running at http://${ip}:${port}`);
+// });

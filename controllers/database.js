@@ -1,21 +1,14 @@
 
 const {Pool, Client} = require("pg");
 
-const credentuals = {
+const credentials = {
     user: "postgres",
     host: process.env.DB_HOST,
     database: "Author-Write-Us",
     password: process.env.DB_PASSWORD,
-    post: process.env.DB_PORT
+    // port: process.env.DB_PORT
+    port: 1111
 }
-const pool = new Pool(credentuals);
-
-
-
-
-
-
+const pool = new Pool(credentials);
 
 module.exports = {pool};
-
-

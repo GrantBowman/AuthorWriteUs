@@ -54,8 +54,15 @@ module.exports = {
     },
 
     getActiveStoryTitles: async function getActiveStoryTitles() {
-        const result = await pool.query('SELECT storytitle FROM storytable WHERE inprogress=TRUE');
-        return result.rows;
+        try {
+            const result = await pool.query('SELECT storytitle FROM storytable WHERE inprogress=TRUE');
+            return result.rows;
+        }
+        catch(err) {
+            err.userMessage = "Unable to get active stories";
+            console.error("GAH! database error uwu:\n", err);
+            throw err; 
+        }
     },
 
     getInactiveStoryTitles: async function getInactiveStoryTitles() {

@@ -23,6 +23,9 @@ form.addEventListener('submit', async (event) => {
     }
     else {
         feedback.textContent = result.message;
+        if (result.returnUrl) {
+            window.location.href = result.returnUrl;
+        }
     }
 
 });

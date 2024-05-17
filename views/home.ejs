@@ -13,9 +13,12 @@
         <p><a href="./create">Create Story</a></p>
         <h2>In-progress Stories:</h2>
         <ul>
-            <% for (const story of stories) { %>
+            <% if (storiesError !== null && storiesError !== undefined) { %>
+                <link rel="stylesheet" href="/styles/error-box.css">
+                <p class="error-box"> Error: <%= storiesError %></p>
+            <% } else if (stories !== null && stories !== undefined) { for (const story of stories) { %>
                 <li><a href="/writing/<%= encodeURI(story.storytitle) %>"><%= story.storytitle %></a></li>
-            <% } %>
+            <% }} %>
         </ul>
         <!-- <table>
             <tr>
