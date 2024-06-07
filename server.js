@@ -1,4 +1,3 @@
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
@@ -306,7 +305,7 @@ app.post("/login-submitted", async (req, res) => {
     catch (err) {
         console.error(`Unable to authenticate user '${username}'`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to authenticate user '${username}'`,
             returnUrl: '/error-page.html'
@@ -320,7 +319,7 @@ app.post("/login-submitted", async (req, res) => {
         req.session.username = username;
         returnUrl = req.session.returnUrl || "/home";
         delete req.session.returnUrl;
-        data = {
+        let data = {
             success: true,
             message: "Login successful.",
             returnUrl: returnUrl
@@ -331,7 +330,7 @@ app.post("/login-submitted", async (req, res) => {
     else {
         console.log("invalid login userId");
         // TODO: notify the user of the input being bad???
-        data = {
+        let data = {
             success: false,
             message: "Login failed."
         }
@@ -357,7 +356,7 @@ app.post('/logout', async (req, res) => {
         console.error(`Unable to logout user ${username}`);
         console.error(err);
         req.session.destroy();
-        data = {
+        let data = {
             success: false,
             message: `Unable to logout user '${username}'`,
             returnUrl: '/error-page.html'
@@ -374,7 +373,7 @@ app.post("/signup-submitted", async (req, res) => {
     // Validate alphanumeric username with no spaces
     const alphanumericPattern = /^[A-Za-z0-9]+$/;
     if (!alphanumericPattern.test(username)) {
-        data = {
+        let data = {
             success: false,
             message: "Invalid username format. Please use alphanumeric."
         }
@@ -384,7 +383,7 @@ app.post("/signup-submitted", async (req, res) => {
 
     // Validate username (no spaces)
     if (username.includes(' ')) {
-        data = {
+        let data = {
             success: false,
             message: "Username cannot contain spaces."
         }
@@ -394,7 +393,7 @@ app.post("/signup-submitted", async (req, res) => {
 
     // check passwords match
     if (password !== confirmPassword) {
-        data = {
+        let data = {
             success: false,
             message: "Passwords do not match."
         }
@@ -407,7 +406,7 @@ app.post("/signup-submitted", async (req, res) => {
         const userId = await Users.getUserId(username);
         if (userId) {
             console.log(`user already exists: userId=${userId}`);
-            data = {
+            let data = {
                 success: false,
                 message: "Username already taken."
             }
@@ -419,7 +418,7 @@ app.post("/signup-submitted", async (req, res) => {
         const result = await Users.addUser(username, password);
         console.log(`user added: result=${result}`);
         req.session.username = username;
-        data = {
+        let data = {
             success: true,
             message: "User registered successfully!"
         }
@@ -429,7 +428,7 @@ app.post("/signup-submitted", async (req, res) => {
     catch (err) {
         console.error(`Unable to signup user ${username}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to signup user '${username}'`,
             returnUrl: '/error-page.html'
@@ -447,7 +446,7 @@ app.post("/story-create", async (req, res) => {
         let storyId = await Stories.getStoryId(storyTitle);
         if (storyId) {
             console.log(`story already exists: storyId=${storyId}`);
-            data = {
+            let data = {
                 success: false,
                 message: "Story title already exists."
             }
@@ -458,7 +457,7 @@ app.post("/story-create", async (req, res) => {
     catch (err) {
         console.error("Unable to get Story ID for story creation.");
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to get Story ID for story creation.`,
             returnUrl: '/error-page.html'
@@ -470,7 +469,7 @@ app.post("/story-create", async (req, res) => {
     try {
         const result = await Stories.addStory(storyTitle, storysettings);
         console.log(`story added: result=${result}`);
-        data = {
+        let data = {
             success: true,
             message: "Story created successfully!",
             returnUrl: "/writing/"+storyTitle
@@ -480,7 +479,7 @@ app.post("/story-create", async (req, res) => {
     catch (err) {
         console.error(`Unable to add storyTitle='${storyTitle}'`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to add story '${storyTitle}'`,
             returnUrl: '/error-page.html'
@@ -513,7 +512,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to get storyId to append to ${storyTitle}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to get storyId to append to storyTitle='${storyTitle}'`,
             returnUrl: '/error-page.html'
@@ -522,11 +521,11 @@ app.post("/story-append", async (req, res) => {
         return;
     }
 
-    let previousinputresult
+    let previousinputresult;
+    let previousinputorder = 0;
     try {
         // get latest index of story
         previousinputresult = await Stories.getPreviousInput(storyId);
-        let previousinputorder = 0;
         if (previousinputresult) {
             previousinputorder = previousinputresult.inputorder;
         }
@@ -534,7 +533,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to add story ${storyTitle}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to add story storyTitle='${storyTitle}'`,
             returnUrl: '/error-page.html'
@@ -552,7 +551,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to get userId for ${username}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to get userId for username='${username}'`,
             returnUrl: '/error-page.html'
@@ -569,7 +568,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to append to story storyId=${storyId} from userId=${userId}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to append to story storyId=${storyId} from userId=${userId}`,
             returnUrl: '/error-page.html'
@@ -596,7 +595,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to get story settings for storyId=${storyId}`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to get story settings for storyId=${storyId}`,
             returnUrl: '/error-page.html'
@@ -619,7 +618,7 @@ app.post("/story-append", async (req, res) => {
     catch (err) {
         console.error(`Unable to resend the story queue`);
         console.error(err);
-        data = {
+        let data = {
             success: false,
             message: `Unable to resend the story queue`,
             returnUrl: '/error-page.html'
